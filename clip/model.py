@@ -347,13 +347,13 @@ class CLIP(nn.Module):
         x = x.permute(1, 0, 2)  # NLD -> LND
         x = self.transformer(x)
         x = x.permute(1, 0, 2)  # LND -> NLD
-        x = self.ln_final(x).type(self.dtype)
+        word_features = self.ln_final(x).type(self.dtype)
 
         # x.shape = [batch_size, n_ctx, transformer.width]
         # take features from the eot embedding (eot_token is the highest number in each sequence)
-        x = x[torch.arange(x.shape[0]), text.argmax(dim=-1)] @ self.text_projection
+        sentence_features = word_features[torch.arange(word_features.shape[0]), text.argmax(dim=-1)] @ self.text_projection
 
-        return x
+        return word_features, sentence_features
 
     def forward(self, image, text):
         image_features = self.encode_image(image)
